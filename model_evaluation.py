@@ -18,3 +18,6 @@ def set_premium(customer_data: pd.DataFrame) -> pd.DataFrame:
             desired_customer:  a boolean column indicating which customers you want to take on
             premium:    the amount of the premium to charge each customer
     """
+
+def utility_curve(dollars: int):
+    return -263.31 + 22.09 * np.log(dollars + 150000)

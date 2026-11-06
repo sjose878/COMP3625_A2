@@ -56,7 +56,7 @@ def feature_selection(features_list, best_score):
 # MAIN CODE
 
 # randomly assign instances to training and test sets. (66.6-33.3 split)
-train_idx = np.random.random(size=customer_data.shape[0]) < 0.6667
+train_idx = np.random.random(size=customer_data.shape[0]) < 0.9
 
 x_train = customer_data.loc[train_idx]
 y_train = customer_claims['claim'].loc[train_idx]
@@ -64,8 +64,9 @@ x_test = customer_data.loc[~train_idx]
 y_test = customer_claims['claim'].loc[~train_idx]
 print(y_train)
 
+neighbor_model = KNeighborsClassifier(n_neighbors=27).fit(X=x_train, y=y_train)
 
-model = LogisticRegression(solver='newton-cholesky').fit(X=x_train, y=y_train)
-print(f'Accuracy with all features: {model.score(x_test, y_test)}')
-print(model.classes_)
-print(model.predict_proba(x_test)[0])
+lr_model = LogisticRegression(solver='newton-cholesky').fit(X=x_train, y=y_train)
+print(f'Accuracy with hello neighbor: {neighbor_model.score(x_test, y_test)}')
+print(f'Accuracy with logistic regression model: {lr_model.score(x_test,y_test)}')
+

@@ -5,6 +5,14 @@ from sklearn.neighbors import KNeighborsClassifier
 
 
 
+    
+# load historical customer data
+customer_data = pd.read_csv('./data/customer_data.csv', index_col=None)
+customer_claims = pd.read_csv('./data/customer_claims.csv', index_col=None)
+
+# write your code to develop your agent program here.
+# you can, of course, add additional .py files as needed.
+
 """
 Takes the wine dataset and recursively discards features one at a time to improve accuracy of classification for LogisticRegression()
 
@@ -19,7 +27,7 @@ def feature_selection(features_list, best_score):
         # create a model with one less feature
         x_minus = x_train[features_list].drop(features_list[i], axis=1)
         x_test_minus = x_test[features_list].drop(features_list[i], axis=1)
-        new_model = LogisticRegression().fit(X=x_minus, y=y_train)
+        new_model = LogisticRegression(solver='newton-cholesky').fit(X=x_minus, y=y_train)
         # see how well the new model does
         score = new_model.score(x_test_minus, y_test)
 
@@ -45,33 +53,19 @@ def feature_selection(features_list, best_score):
         print("No more improvement can be found!")
         return best_model, best_score
 
-    
-# load historical customer data
-customer_data = pd.read_csv('./data/customer_data.csv', index_col=None)
-customer_claims = pd.read_csv('./data/customer_claims.csv', index_col=None)
+# MAIN CODE
 
-# write your code to develop your agent program here.
-# you can, of course, add additional .py files as needed.
-
-# randomly assign instances to training and test sets (50% each for illustration purposes - 66.6% training maybe more typical)
-train_idx = np.random.random(size=customer_data.shape[0]) < 0.5
+# randomly assign instances to training and test sets. (66.6-33.3 split)
+train_idx = np.random.random(size=customer_data.shape[0]) < 0.6667
 
 x_train = customer_data.loc[train_idx]
 y_train = customer_claims['claim'].loc[train_idx]
 x_test = customer_data.loc[~train_idx]
 y_test = customer_claims['claim'].loc[~train_idx]
 print(y_train)
-#model = LogisticRegression(max_iter=100000).fit(X=x_train,y=y_train)
-model = KNeighborsClassifier(n_neighbors=1).fit(X=x_train, y=y_train)
+
+
+model = LogisticRegression(solver='newton-cholesky').fit(X=x_train, y=y_train)
 print(f'Accuracy with all features: {model.score(x_test, y_test)}')
-
-features_list = x_train.columns # start with all features.
-best_score = model.score(x_test, y_test)
-print(best_score)
-
-better_model, best_score = feature_selection(features_list, best_score)
-
-if (better_model is None):
-    print(f'No improvement found during selection.')
-else:
-    print(f'Accuracy after feature selection: {best_score}')
+print(model.classes_)
+print(model.predict_proba(x_test)[0])

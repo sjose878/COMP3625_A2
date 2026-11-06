@@ -51,6 +51,7 @@ def set_premium(customer_data: pd.DataFrame) -> pd.DataFrame:
     probabilities = model.predict_proba(customer_data)
 
     sorted_customers = []
+    total_profit = 0
 
     for i in range(len(customer_data)):
         coverage = int(customer_data.loc[i, "coverage_amount"])
@@ -78,9 +79,12 @@ def set_premium(customer_data: pd.DataFrame) -> pd.DataFrame:
         if (total_coverage_amount + sorted_customers[i]["coverage"] < BUDGET) and (eu_insured > eu_uninsured) and (sorted_customers[i]["expected_profit"] > 0):
             desired_customer = True
             total_coverage_amount += sorted_customers[i]["coverage"]
+            total_profit += sorted_customers[i]["expected_profit"]
   
         customer_premiums[sorted_customers[i]["index"]] = [sorted_customers[i]["p_claim"], desired_customer, sorted_customers[i]["premium"]]
 
+    print(f'total budget used: {total_coverage_amount}')
+    print(f'total profit: {total_profit}')
     return pd.DataFrame(customer_premiums, columns=["p_claim", "desired_customer", "premium"])
 
 result = set_premium(customer_data)

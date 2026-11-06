@@ -3,8 +3,6 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 
-
-
     
 # load historical customer data
 customer_data = pd.read_csv('./data/customer_data.csv', index_col=None)
@@ -13,13 +11,15 @@ customer_claims = pd.read_csv('./data/customer_claims.csv', index_col=None)
 # write your code to develop your agent program here.
 # you can, of course, add additional .py files as needed.
 
+
+
 """
 Takes the wine dataset and recursively discards features one at a time to improve accuracy of classification for LogisticRegression()
 
 param: features_list - list of features from wine dataset. Since it's recursive, the parameter may also be the list of features that are redudant for classification
 param: best_score - accuracy score that needs to be surpassed to determine if another feature should be recursively removed. 0 is passed in initially
 """
-def feature_selection(features_list, best_score):
+def feature_selection(features_list, best_score: float):
     best_model = None
     accuracy_improved = False
     # try every combo of every feature except one
@@ -27,6 +27,7 @@ def feature_selection(features_list, best_score):
         # create a model with one less feature
         x_minus = x_train[features_list].drop(features_list[i], axis=1)
         x_test_minus = x_test[features_list].drop(features_list[i], axis=1)
+
         new_model = LogisticRegression(solver='newton-cholesky').fit(X=x_minus, y=y_train)
         # see how well the new model does
         score = new_model.score(x_test_minus, y_test)
@@ -55,18 +56,33 @@ def feature_selection(features_list, best_score):
 
 # MAIN CODE
 
-# randomly assign instances to training and test sets. (66.6-33.3 split)
-train_idx = np.random.random(size=customer_data.shape[0]) < 0.9
+# randomly assign instances to training, validation, and test sets.
+# 80% training, 10% validation, 10% test
+random_instances = np.random.random(size=customer_data.shape[0])
+train_idx = random_instances < 0.8
+validation_idx = (random_instances >= 0.8) & (random_instances < 0.9)
+test_idx = random_instances >= 0.9
 
 x_train = customer_data.loc[train_idx]
 y_train = customer_claims['claim'].loc[train_idx]
-x_test = customer_data.loc[~train_idx]
-y_test = customer_claims['claim'].loc[~train_idx]
-print(y_train)
 
+x_validation = customer_data.loc[validation_idx]
+y_validation = customer_claims['claim'].loc[validation_idx]
+
+x_test = customer_data.loc[test_idx]
+y_test = customer_claims['claim'].loc[test_idx]
+
+# create a supervised learning model
 neighbor_model = KNeighborsClassifier(n_neighbors=27).fit(X=x_train, y=y_train)
-
 lr_model = LogisticRegression(solver='newton-cholesky').fit(X=x_train, y=y_train)
 print(f'Accuracy with hello neighbor: {neighbor_model.score(x_test, y_test)}')
-print(f'Accuracy with logistic regression model: {lr_model.score(x_test,y_test)}')
+
+lr_score = lr_model.score(x_test,y_test)
+print(f'Accuracy with logistic regression model: {lr_score}')
+
+# Feature selection
+features_list = x_train.columns
+reduced_model, reduced_model_score = feature_selection(features_list,lr_score)
+print(f'Accuracy after feature selection: {reduced_model_score}')
+
 

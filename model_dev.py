@@ -15,44 +15,63 @@ customer_claims = pd.read_csv('./data/customer_claims.csv', index_col=None)
 
 """
 Takes the wine dataset and recursively discards features one at a time to improve accuracy of classification for LogisticRegression()
-
+Code is repurposed from lab 6
 param: features_list - list of features from wine dataset. Since it's recursive, the parameter may also be the list of features that are redudant for classification
 param: best_score - accuracy score that needs to be surpassed to determine if another feature should be recursively removed. 0 is passed in initially
 """
 def feature_selection(features_list, best_score: float):
     best_model = None
+    feature_dropped = None
     accuracy_improved = False
+    best_curr_score = best_score
+
     # try every combo of every feature except one
     for i in range(len(features_list)): 
+
         # create a model with one less feature
-        x_minus = x_train[features_list].drop(features_list[i], axis=1)
-        x_test_minus = x_test[features_list].drop(features_list[i], axis=1)
+        reduced_features = features_list.drop(features_list[i])
+        x_minus = x_train[reduced_features]
+        x_valid_minus = x_validation[reduced_features]
 
-        new_model = LogisticRegression(solver='newton-cholesky').fit(X=x_minus, y=y_train)
+        new_model = LogisticRegression(solver='newton-cholesky')
+        new_model.fit(X=x_minus, y=y_train)
+
         # see how well the new model does
-        score = new_model.score(x_test_minus, y_test)
+        score = new_model.score(x_valid_minus, y_validation)
 
-        if score > best_score:
-            best_score = score
+        if score > best_curr_score:
+            best_curr_score = score
             best_model = new_model
             feature_dropped = features_list[i]
             print(f'Feature dropped: {feature_dropped}')
             accuracy_improved = True
 
-    if accuracy_improved:
-        # drop insignificant feature.
-        features_list = features_list.drop(feature_dropped)
-        # Recursively remove another feature (if improvement is found).
-        best_model, best_score = feature_selection(features_list, best_score)
-
-        if best_model is None:
-            return new_model, best_score
-        
-        return best_model, best_score
-    else:
-        # Return model & score if no improvement is found from removing a feature.
+    # No improvement found: stop recursion
+    if feature_dropped is None:
         print("No more improvement can be found!")
-        return best_model, best_score
+
+        final_model = LogisticRegression(
+            solver='newton-cholesky',
+            max_iter=1000
+        )
+
+        final_model.fit(x_train[features_list], y_train)
+
+        return final_model, best_score, features_list
+
+    # Remove the best feature found
+    print(
+        f"Feature dropped: {best_feature_to_drop} "
+        f"(score={best_score_this_round:.4f})"
+    )
+
+    reduced_features = features_list.drop(best_feature_to_drop)
+
+    # Recurse
+    return feature_selection(
+        reduced_features,
+        best_score_this_round
+    )
 
 # MAIN CODE
 
@@ -80,9 +99,13 @@ print(f'Accuracy with hello neighbor: {neighbor_model.score(x_test, y_test)}')
 lr_score = lr_model.score(x_test,y_test)
 print(f'Accuracy with logistic regression model: {lr_score}')
 
-# Feature selection
+# Bidirectional stepwise feature selection. 
 features_list = x_train.columns
-reduced_model, reduced_model_score = feature_selection(features_list,lr_score)
+reduced_model, reduced_model_score, reduced_features = feature_selection(features_list,lr_score)
 print(f'Accuracy after feature selection: {reduced_model_score}')
+print((len(reduced_features)))
+print((reduced_features))
+
+improved = True
 
 

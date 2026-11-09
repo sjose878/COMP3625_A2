@@ -4,6 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import confusion_matrix
+from joblib import dump
 
     
 # load historical customer data
@@ -149,3 +150,7 @@ sensitivity = tp / (tp + fn)
 specificity = tn / (tn + fp)
 
 print(f'Accuracy: {accuracy}\nSensitivity: {sensitivity}\nSpecificity: {specificity}')
+
+# Save the trained model and the subset of features to be used in model_evaluation.py
+dump(reduced_model, "trained_model.joblib")
+dump(reduced_features, "reduced_features.joblib")

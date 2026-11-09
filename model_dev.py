@@ -106,6 +106,8 @@ x_test_inter = pd.DataFrame(
     index=x_test.index
 )
 
+feature_names = x_train_inter.columns
+
 # create a supervised learning model
 neighbor_model = KNeighborsClassifier(n_neighbors=27).fit(X=x_train, y=y_train)
 lr_model = LogisticRegression(max_iter=1000).fit(X=x_train, y=y_train)
@@ -115,10 +117,11 @@ lr_score = lr_model.score(x_test,y_test)
 print(f'Accuracy with logistic regression model: {lr_score}')
 
 
-features_list = x_train.columns
+#features_list = x_train.columns
+print((len(feature_names)))
 
 # Do reverse stepwise feature selection and train a model with subset of features
-reduced_model, reduced_features = feature_selection(features_list,lr_score)
+reduced_model, reduced_features = feature_selection(feature_names,lr_score)
 print(f'Accuracy after feature selection: {reduced_model.score(x_test[reduced_features], y_test)}')
 print((len(reduced_features)))
 #print((reduced_features))

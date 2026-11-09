@@ -20,9 +20,7 @@ param: features_list - list of features from wine dataset. Since it's recursive,
 param: best_score - accuracy score that needs to be surpassed to determine if another feature should be recursively removed. 0 is passed in initially
 """
 def feature_selection(features_list, best_score: float):
-    best_model = None
     feature_dropped = None
-    accuracy_improved = False
     best_curr_score = best_score
 
     # try every combo of every feature except one
@@ -33,44 +31,29 @@ def feature_selection(features_list, best_score: float):
         x_minus = x_train[reduced_features]
         x_valid_minus = x_validation[reduced_features]
 
-        new_model = LogisticRegression()
+        new_model = LogisticRegression(max_iter=2000)
         new_model.fit(X=x_minus, y=y_train)
 
         # see how well the new model does
         score = new_model.score(x_valid_minus, y_validation)
 
-        if score > best_curr_score:
+        if score >= best_curr_score:
             best_curr_score = score
-            best_model = new_model
             feature_dropped = features_list[i]
-            #print(f'Feature dropped: {feature_dropped}')
-            accuracy_improved = True
 
     # No improvement found: stop recursion
     if feature_dropped is None:
         print("No more improvement can be found!")
+        # Train reduced model with the best subset of features
+        final_model = LogisticRegression(max_iter=2000)
+        final_model.fit(x_train[features_list], y_train)
 
-        final_model = LogisticRegression(
-            solver='newton-cholesky'
-        )
+        return final_model, features_list
 
-        final_model.fit(x_test[features_list], y_test)
-
-        return final_model, best_score, features_list
-
-    # Remove the best feature found
-    print(
-        f"Feature dropped: {feature_dropped} "
-        f"(score={best_curr_score:.4f})"
-    )
-
+    # Improvement found: recurse again with worst feature removed
+    print(f"Feature dropped: {feature_dropped}")
     reduced_features = features_list.drop(feature_dropped)
-
-    # Recurse
-    return feature_selection(
-        reduced_features,
-        best_curr_score
-    )
+    return feature_selection(reduced_features, best_curr_score)
 
 # MAIN CODE
 
@@ -92,18 +75,18 @@ y_test = customer_claims['claim'].loc[test_idx]
 
 # create a supervised learning model
 neighbor_model = KNeighborsClassifier(n_neighbors=27).fit(X=x_train, y=y_train)
-lr_model = LogisticRegression().fit(X=x_train, y=y_train)
+lr_model = LogisticRegression(max_iter=1000).fit(X=x_train, y=y_train)
 print(f'Accuracy with hello neighbor: {neighbor_model.score(x_test, y_test)}')
 
 lr_score = lr_model.score(x_test,y_test)
 print(f'Accuracy with logistic regression model: {lr_score}')
 
-# Bidirectional stepwise feature selection. 
+# Reverse stepwise feature selection. 
 features_list = x_train.columns
-reduced_model, reduced_model_score, reduced_features = feature_selection(features_list,lr_score)
+reduced_model, reduced_features = feature_selection(features_list,lr_score)
 print(f'Accuracy after feature selection: {reduced_model.score(x_test[reduced_features], y_test)}')
 print((len(reduced_features)))
-print((reduced_features))
+#print((reduced_features))
 
 improved = True
 

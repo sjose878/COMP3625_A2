@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
-
+from sklearn.preprocessing import PolynomialFeatures
     
 # load historical customer data
 customer_data = pd.read_csv('./data/customer_data.csv', index_col=None)
@@ -10,7 +10,6 @@ customer_claims = pd.read_csv('./data/customer_claims.csv', index_col=None)
 
 # write your code to develop your agent program here.
 # you can, of course, add additional .py files as needed.
-
 
 
 """
@@ -28,8 +27,8 @@ def feature_selection(features_list, best_score: float):
 
         # create a model with one less feature
         reduced_features = features_list.drop(features_list[i])
-        x_minus = x_train[reduced_features]
-        x_valid_minus = x_validation[reduced_features]
+        x_minus = x_train_inter[reduced_features]
+        x_valid_minus = x_validation_inter[reduced_features]
 
         new_model = LogisticRegression(max_iter=2000)
         new_model.fit(X=x_minus, y=y_train)
@@ -46,7 +45,7 @@ def feature_selection(features_list, best_score: float):
         print("No more improvement can be found!")
         # Train reduced model with the best subset of features
         final_model = LogisticRegression(max_iter=2000)
-        final_model.fit(x_train[features_list], y_train)
+        final_model.fit(x_train_inter[features_list], y_train)
 
         return final_model, features_list
 
@@ -56,6 +55,12 @@ def feature_selection(features_list, best_score: float):
     return feature_selection(reduced_features, best_curr_score)
 
 # MAIN CODE
+
+poly = PolynomialFeatures(
+    degree=2,
+    interaction_only=True,
+    include_bias=False
+)
 
 # randomly assign instances to training, validation, and test sets.
 # 80% training, 10% validation, 10% test
@@ -73,6 +78,34 @@ y_validation = customer_claims['claim'].loc[validation_idx]
 x_test = customer_data.loc[test_idx]
 y_test = customer_claims['claim'].loc[test_idx]
 
+# Creat all pairwise interactions of all 21 features
+x_train_inter = poly.fit_transform(x_train)
+x_validation_inter = poly.transform(x_validation)
+x_test_inter = poly.transform(x_test)
+
+# Maintain feature names
+feature_names = poly.get_feature_names_out(
+    x_train.columns
+)
+
+x_train_inter = pd.DataFrame(
+    x_train_inter,
+    columns=feature_names,
+    index=x_train.index
+)
+
+x_validation_inter = pd.DataFrame(
+    x_validation_inter,
+    columns=feature_names,
+    index=x_validation.index
+)
+
+x_test_inter = pd.DataFrame(
+    x_test_inter,
+    columns=feature_names,
+    index=x_test.index
+)
+
 # create a supervised learning model
 neighbor_model = KNeighborsClassifier(n_neighbors=27).fit(X=x_train, y=y_train)
 lr_model = LogisticRegression(max_iter=1000).fit(X=x_train, y=y_train)
@@ -81,13 +114,13 @@ print(f'Accuracy with hello neighbor: {neighbor_model.score(x_test, y_test)}')
 lr_score = lr_model.score(x_test,y_test)
 print(f'Accuracy with logistic regression model: {lr_score}')
 
-# Reverse stepwise feature selection. 
+
 features_list = x_train.columns
+
+# Do reverse stepwise feature selection and train a model with subset of features
 reduced_model, reduced_features = feature_selection(features_list,lr_score)
 print(f'Accuracy after feature selection: {reduced_model.score(x_test[reduced_features], y_test)}')
 print((len(reduced_features)))
 #print((reduced_features))
-
-improved = True
 
 

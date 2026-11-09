@@ -3,6 +3,8 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.metrics import confusion_matrix
+
     
 # load historical customer data
 customer_data = pd.read_csv('./data/customer_data.csv', index_col=None)
@@ -28,15 +30,14 @@ def feature_selection(features_list, best_score: float):
         # create a model with one less feature
         print(f'Feature being tested: {features_list[i]}')
         reduced_features = features_list.drop(features_list[i])
-        x_minus = x_train_inter[reduced_features]
-        x_valid_minus = x_validation_inter[reduced_features]
+        x_minus = x_train[reduced_features] # CHANGE IF INTERACTION
+        x_valid_minus = x_validation[reduced_features]
 
         new_model = KNeighborsClassifier(n_neighbors=7)
         new_model.fit(X=x_minus, y=y_train)
 
         # see how well the new model does
         score = new_model.score(x_valid_minus, y_validation)
-        print(f'score: {best_curr_score}')
         if score >= best_curr_score:
             best_curr_score = score
             feature_dropped = features_list[i]
@@ -46,13 +47,14 @@ def feature_selection(features_list, best_score: float):
         print("No more improvement can be found!")
         # Train reduced model with the best subset of features
         final_model = KNeighborsClassifier(n_neighbors=7)
-        final_model.fit(x_train_inter[features_list], y_train)
+        final_model.fit(x_train[features_list], y_train) # CHANGE IF INTERACTION
 
         return final_model, features_list
 
     # Improvement found: recurse again with worst feature removed
-    print(f"Feature dropped: {feature_dropped}")
     reduced_features = features_list.drop(feature_dropped)
+    print(f"Feature dropped: {feature_dropped}")
+    print(f'# of features remaining: {len(reduced_features)}')
     return feature_selection(reduced_features, best_curr_score)
 
 # MAIN CODE
@@ -79,15 +81,15 @@ y_validation = customer_claims['claim'].loc[validation_idx]
 x_test = customer_data.loc[test_idx]
 y_test = customer_claims['claim'].loc[test_idx]
 
-# Do feature select on random subset
+# Do feature select on random subset. Reduce computation time.
 subset_idx = np.random.choice(
     x_train.index,
     size=20000,
     replace=False
 )
-
-x_train = x_train.loc[subset_idx]
-y_train = y_train.loc[subset_idx]
+# The training data to be used in feature selection
+x_train_fs = x_train.loc[subset_idx]
+y_train_fs = y_train.loc[subset_idx]
 
 # Creat all pairwise interactions of all 21 features
 x_train_inter = poly.fit_transform(x_train)
@@ -120,21 +122,30 @@ x_test_inter = pd.DataFrame(
 feature_names = x_train_inter.columns
 
 # create a supervised learning model
-neighbor_model = KNeighborsClassifier(n_neighbors=7).fit(X=x_train, y=y_train)
+neighbor_model = KNeighborsClassifier(n_neighbors=9).fit(X=x_train, y=y_train)
 lr_model = LogisticRegression(max_iter=1000).fit(X=x_train, y=y_train)
 print(f'Accuracy with hello neighbor: {neighbor_model.score(x_test, y_test)}')
 
 lr_score = lr_model.score(x_test,y_test)
 print(f'Accuracy with logistic regression model: {lr_score}')
 
-
-#features_list = x_train.columns
+# note to self: features_list -> 21 features, feature_names -> 231 features
+features_list = x_train.columns
 print((len(feature_names)))
+print(features_list)
 
 # Do reverse stepwise feature selection and train a model with subset of features
-reduced_model, reduced_features = feature_selection(features_list=feature_names, best_score=0)
+reduced_model, reduced_features = feature_selection(features_list=features_list, best_score=0)
 print(f'Accuracy after feature selection: {reduced_model.score(x_test[reduced_features], y_test)}')
 print((len(reduced_features)))
 #print((reduced_features))
 
+# Compute accuracy, sensitivity, and specificity of model with confusion matrix
+y_predictions = reduced_model.predict(x_test_inter[reduced_features])
 
+tn, fp, fn, tp = confusion_matrix(y_test, y_predictions).ravel()
+accuracy = (tp + tn) / (tp + tn + fp + fn)
+sensitivity = tp / (tp + fn)
+specificity = tn / (tn + fp)
+
+print(f'Accuracy: {accuracy}\nSensitivity: {sensitivity}\nSpecificity: {specificity}')

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
+from joblib import load
 
 # from model_dev import model
 
@@ -14,7 +15,7 @@ customer_claims = pd.read_csv('./data/customer_claims.csv', index_col=None)
 
 # write your code to develop your agent program here.
 # you can, of course, add additional .py files as needed.
-
+"""
 # randomly assign instances to training and test sets (50% each for illustration purposes - 66.6% training maybe more typical)
 train_idx = np.random.random(size=customer_data.shape[0]) < 0.5
 
@@ -22,10 +23,13 @@ x_train = customer_data.loc[train_idx]
 y_train = customer_claims['claim'].loc[train_idx]
 x_test = customer_data.loc[~train_idx]
 y_test = customer_claims['claim'].loc[~train_idx]
-model = LogisticRegression(max_iter=1000).fit(X=x_train,y=y_train)
+#model = LogisticRegression(max_iter=1000).fit(X=x_train,y=y_train)
 #model = KNeighborsClassifier(n_neighbors=1).fit(X=x_train, y=y_train)
 
 #temp ^ need trained model
+"""
+model = load("trained_model.joblib")
+reduced_features = load("reduced_features.joblib")
 
 # At grading time, I will call the below function with a dataframe of new potential customers
 # The dataframe I pass in will have the same columns as customer_data.csv, but will not include any of the customers in customer_data.csv
@@ -45,15 +49,15 @@ def set_premium(customer_data: pd.DataFrame) -> pd.DataFrame:
             premium:    the amount of the premium to charge each customer
     """
     # https://stackoverflow.com/questions/10712002/create-an-empty-list-with-certain-size-in-python
-    customer_premiums = [None] * len(customer_data)
+    customer_premiums = [None] * len(customer_data[reduced_features])
     total_coverage_amount = 0
 
-    probabilities = model.predict_proba(customer_data)
+    probabilities = model.predict_proba(customer_data[reduced_features])
 
     sorted_customers = []
     total_profit = 0
 
-    for i in range(len(customer_data)):
+    for i in range(len(customer_data[reduced_features])):
         coverage = int(customer_data.loc[i, "coverage_amount"])
         p_no_claim = probabilities[i][0]
         p_claim = probabilities[i][1]

@@ -8,6 +8,11 @@ Question 1:
 The supervised learning model you used: report its accuracy, sensitivity, and specificity in predicting claims.
 Refer to specific line numbers where these things are measured.
 
+Accuracy:
+Sensitivity:
+Specificity:
+
+These are measured on lines INSERT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 

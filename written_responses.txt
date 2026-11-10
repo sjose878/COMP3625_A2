@@ -1,7 +1,7 @@
 Question 0:
 Report the line number(s) where your program performs utility calculations
 
-
+Utility calculations are performed on lines FILL ANSWER HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
 Question 1:
@@ -20,3 +20,8 @@ How confident are you that your model has not overfit the historical data? Why?
 
 Question 3:
 In this assignment scenario, which party is acting according to the principle of maximum expected utililty? The customer? Your program? Both?
+
+Customers act according to the principle of maximum utility since they choose between the expected utility of being uninsured
+and the expected utility of being insured. Whichever expected utility ends up being higher is the option they want to choose.
+The program also acts according to the principle of maximum utility, where its utility can be infered to be U($) = expected profit.
+It sorts customers from highest expected profit to lowest expected profit, choosing to take whichever customers are the highest while the budget allows. 

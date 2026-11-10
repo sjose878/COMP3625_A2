@@ -39,6 +39,9 @@ def utility_curve(dollars: int):
     :param dollars: an integer representing the given dollar amount.
     :return: a float representing the customers utility for the dollar amount. 
     """
+    if dollars + 150000 <= 0:
+        return -263.31 + 22.09 * np.log(-149999 + 150000)
+ 
     return -263.31 + 22.09 * np.log(dollars + 150000)
 
 def set_premium(customer_data: pd.DataFrame) -> pd.DataFrame:

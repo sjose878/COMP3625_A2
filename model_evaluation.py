@@ -13,19 +13,7 @@ customer_claims = pd.read_csv('./data/customer_claims.csv', index_col=None)
 
 # write your code to develop your agent program here.
 # you can, of course, add additional .py files as needed.
-"""
-# randomly assign instances to training and test sets (50% each for illustration purposes - 66.6% training maybe more typical)
-train_idx = np.random.random(size=customer_data.shape[0]) < 0.5
 
-x_train = customer_data.loc[train_idx]
-y_train = customer_claims['claim'].loc[train_idx]
-x_test = customer_data.loc[~train_idx]
-y_test = customer_claims['claim'].loc[~train_idx]
-#model = LogisticRegression(max_iter=1000).fit(X=x_train,y=y_train)
-#model = KNeighborsClassifier(n_neighbors=1).fit(X=x_train, y=y_train)
-
-#temp ^ need trained model
-"""
 model = load("trained_model.joblib")
 reduced_features = load("reduced_features.joblib")
 
@@ -39,8 +27,8 @@ def utility_curve(dollars: int):
     :param dollars: an integer representing the given dollar amount.
     :return: a float representing the customers utility for the dollar amount. 
     """
-    if dollars + 150000 <= 0:
-        return -263.31 + 22.09 * np.log(-149999 + 150000)
+    if dollars + 150000 <= 0: #kept running into invalid log input errors. not the best fix but oh well.
+        return -263.31 + 22.09 * np.log(-149999 + 150000) #set dollars to lowest possible valid number. 
  
     return -263.31 + 22.09 * np.log(dollars + 150000)
 

@@ -1,7 +1,7 @@
 Question 0:
 Report the line number(s) where your program performs utility calculations
 
-Utility calculations are performed on lines 77 and 78, with the utility curve function at line 24.
+Utility calculations are performed on lines 78 and 79, with the utility curve function at line 24.
 
 
 Question 1:

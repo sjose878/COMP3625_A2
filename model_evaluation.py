@@ -67,21 +67,24 @@ def set_premium(customer_data: pd.DataFrame) -> pd.DataFrame:
                                 "expected_profit": expected_profit,
                                 })
 
-    # sorts customers by highest expected profit to lowest expected profit
+    #sorts customers by highest expected profit to lowest expected profit
     sorted_customers.sort(key=lambda x: x["expected_profit"], reverse=True)
 
     #calculates uninsured and insured utility for each customer then decides if the customer is a desired customer 
     for i in range(len(sorted_customers)):
         desired_customer = False
 
+        #calculate expected utilities
         eu_uninsured = sorted_customers[i]["p_no_claim"] * utility_curve(0) + sorted_customers[i]["p_claim"] * utility_curve(-(sorted_customers[i]["coverage"])) #probability of no claim -> wont lose anything so 0. probability of claim -> will lose full coverage
         eu_insured = sorted_customers[i]["p_no_claim"] * utility_curve(-(sorted_customers[i]["premium"])) + sorted_customers[i]["p_claim"] * utility_curve(-(sorted_customers[i]["premium"])) #probability of no claim -> wont lose anything so 0 lost but still pay premium. probability of claim -> insurance reimburses coverage amount but still have to pay premium
 
+        #find desired customers
         if (total_coverage_amount + sorted_customers[i]["coverage"] < BUDGET) and (eu_insured > eu_uninsured) and (sorted_customers[i]["expected_profit"] > 0):
             desired_customer = True
             total_coverage_amount += sorted_customers[i]["coverage"]
             total_profit += sorted_customers[i]["expected_profit"]
-  
+        
+        #set each customer's premiums
         customer_premiums[sorted_customers[i]["index"]] = [sorted_customers[i]["p_claim"], desired_customer, sorted_customers[i]["premium"]]
 
     print(f'total budget used: {total_coverage_amount}')
@@ -89,4 +92,4 @@ def set_premium(customer_data: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(customer_premiums, columns=["p_claim", "desired_customer", "premium"])
 
 result = set_premium(customer_data)
-print(result[result["desired_customer"] == True])
+print(result[result["desired_customer"] == True]) #because there's so many customers, showcasing only desired ones helps us see whats getting chosen.

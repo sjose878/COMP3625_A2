@@ -8,11 +8,12 @@ Question 1:
 The supervised learning model you used: report its accuracy, sensitivity, and specificity in predicting claims.
 Refer to specific line numbers where these things are measured.
 
-Accuracy:
-Sensitivity:
-Specificity:
+The following are measurements from the model "trained_model_inter2.joblib" which was given all the features and feature interactions before feature selection was done on it
+Accuracy: 0.6980
+Sensitivity: 0.3080
+Specificity: 0.8933
 
-These are measured on lines INSERT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+These are measured on lines 146, 147, and 148 in model_dev.py
 
 
 

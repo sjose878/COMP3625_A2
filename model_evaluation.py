@@ -4,8 +4,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from joblib import load
 
-# from model_dev import model
-
 BUDGET = 1000000
 PREMIUM_MULTIPLIER = 1.2 #20% on top of coverage
 
@@ -36,6 +34,11 @@ reduced_features = load("reduced_features.joblib")
 # You will not be given any of the historical customer data or claims data at grading time, 
 # so you will need to save any models you train in model_dev.py and load them here.
 def utility_curve(dollars: int):
+    """
+    Takes the given dollar amount and returns the current customer's utility for that amount. 
+    :param dollars: an integer representing the given dollar amount.
+    :return: a float representing the customers utility for the dollar amount. 
+    """
     return -263.31 + 22.09 * np.log(dollars + 150000)
 
 def set_premium(customer_data: pd.DataFrame) -> pd.DataFrame:
@@ -57,6 +60,7 @@ def set_premium(customer_data: pd.DataFrame) -> pd.DataFrame:
     sorted_customers = []
     total_profit = 0
 
+    # calculated needed values for customers and stores them
     for i in range(len(customer_data[reduced_features])):
         coverage = int(customer_data.loc[i, "coverage_amount"])
         p_no_claim = probabilities[i][0]
@@ -72,8 +76,10 @@ def set_premium(customer_data: pd.DataFrame) -> pd.DataFrame:
                                 "expected_profit": expected_profit,
                                 })
 
+    # sorts customers by highest expected profit to lowest expected profit
     sorted_customers.sort(key=lambda x: x["expected_profit"], reverse=True)
 
+    #calculates uninsured and insured utility for each customer then decides if the customer is a desired customer 
     for i in range(len(sorted_customers)):
         desired_customer = False
 

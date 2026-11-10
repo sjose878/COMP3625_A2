@@ -13,24 +13,25 @@ customer_claims = pd.read_csv('./data/customer_claims.csv', index_col=None)
 # write your code to develop your agent program here.
 # you can, of course, add additional .py files as needed.
 
+# Parameter for KNeighborsClassifier
 N_NEIGHBORS = 41
 
 """
-Takes a list of the features of a dataset and recursively... train model
+Trains a model on dataset by taking list of dataset features and doing backwards stepwise regression to find best subset of features to fit model.
+This function does backwards feature elimination recursively.
+
 Code is repurposed from lab 6
-param: features_list - list of features from wine dataset. Since it's recursive, the parameter may also be the list of features that are redudant for classification
-param: best_score - accuracy score that needs to be surpassed to determine if another feature should be recursively removed. 0 is passed in initially
+
+param: features_list - list of features from the dataset.
+param: best_score - accuracy score that needs to be surpassed to determine if another feature should be recursively removed.
+return: final_model - a model with the best subset of features that's already trained on test data.
+return: features_list - the list of features from the dataset with only the features that were not removed.
 """
 def feature_selection(features_list, best_score: float):
     # Edge case so it does not remove all features.
     if len(features_list) <= 1:
-        final_model = KNeighborsClassifier(
-        n_neighbors=N_NEIGHBORS
-    )
-        final_model.fit(
-        x_train_inter[features_list],
-        y_train
-    )
+        final_model = KNeighborsClassifier(n_neighbors=N_NEIGHBORS)
+        final_model.fit(x_train_inter[features_list],y_train)
         return final_model, features_list
     
     feature_dropped = None
@@ -42,7 +43,7 @@ def feature_selection(features_list, best_score: float):
         # create a model with one less feature
         print(f'Feature being tested: {features_list[i]}')
         reduced_features = features_list.drop(features_list[i])
-        x_minus = x_train_fs_inter[reduced_features] # CHANGE IF INTERACTION
+        x_minus = x_train_fs_inter[reduced_features]
         x_valid_minus = x_validation_inter[reduced_features]
 
         new_model = KNeighborsClassifier(n_neighbors=N_NEIGHBORS)
@@ -60,7 +61,7 @@ def feature_selection(features_list, best_score: float):
         print("No more improvement can be found!")
         # Train reduced model with the best subset of features
         final_model = KNeighborsClassifier(n_neighbors=N_NEIGHBORS)
-        final_model.fit(x_train_inter[features_list], y_train) # CHANGE IF INTERACTION
+        final_model.fit(x_train_inter[features_list], y_train)
 
         return final_model, features_list
 

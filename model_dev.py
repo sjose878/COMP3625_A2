@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import confusion_matrix
@@ -14,14 +13,26 @@ customer_claims = pd.read_csv('./data/customer_claims.csv', index_col=None)
 # write your code to develop your agent program here.
 # you can, of course, add additional .py files as needed.
 
+N_NEIGHBORS = 41
 
 """
-Takes the wine dataset and recursively discards features one at a time to improve accuracy of classification for LogisticRegression()
+Takes a list of the features of a dataset and recursively...
 Code is repurposed from lab 6
 param: features_list - list of features from wine dataset. Since it's recursive, the parameter may also be the list of features that are redudant for classification
 param: best_score - accuracy score that needs to be surpassed to determine if another feature should be recursively removed. 0 is passed in initially
 """
 def feature_selection(features_list, best_score: float):
+    # Edge case so it does not remove all features.
+    if len(features_list) <= 1:
+        final_model = KNeighborsClassifier(
+        n_neighbors=N_NEIGHBORS
+    )
+        final_model.fit(
+        x_train_inter[features_list],
+        y_train
+    )
+        return final_model, features_list
+    
     feature_dropped = None
     best_curr_score = best_score
 
@@ -31,15 +42,16 @@ def feature_selection(features_list, best_score: float):
         # create a model with one less feature
         print(f'Feature being tested: {features_list[i]}')
         reduced_features = features_list.drop(features_list[i])
-        x_minus = x_train[reduced_features] # CHANGE IF INTERACTION
-        x_valid_minus = x_validation[reduced_features]
+        x_minus = x_train_fs_inter[reduced_features] # CHANGE IF INTERACTION
+        x_valid_minus = x_validation_inter[reduced_features]
 
-        new_model = KNeighborsClassifier(n_neighbors=7)
-        new_model.fit(X=x_minus, y=y_train)
+        new_model = KNeighborsClassifier(n_neighbors=N_NEIGHBORS)
+        new_model.fit(X=x_minus, y=y_train_fs)
 
         # see how well the new model does
         score = new_model.score(x_valid_minus, y_validation)
-        if score >= best_curr_score:
+
+        if score > best_curr_score + 1e-6:
             best_curr_score = score
             feature_dropped = features_list[i]
 
@@ -47,8 +59,8 @@ def feature_selection(features_list, best_score: float):
     if feature_dropped is None:
         print("No more improvement can be found!")
         # Train reduced model with the best subset of features
-        final_model = KNeighborsClassifier(n_neighbors=7)
-        final_model.fit(x_train[features_list], y_train) # CHANGE IF INTERACTION
+        final_model = KNeighborsClassifier(n_neighbors=N_NEIGHBORS)
+        final_model.fit(x_train_inter[features_list], y_train) # CHANGE IF INTERACTION
 
         return final_model, features_list
 
@@ -83,14 +95,16 @@ x_test = customer_data.loc[test_idx]
 y_test = customer_claims['claim'].loc[test_idx]
 
 # Do feature select on random subset. Reduce computation time.
+subset_size = min(20000, len(x_train))
 subset_idx = np.random.choice(
     x_train.index,
-    size=20000,
+    size=subset_size,
     replace=False
 )
 # The training data to be used in feature selection
 x_train_fs = x_train.loc[subset_idx]
 y_train_fs = y_train.loc[subset_idx]
+
 
 # Creat all pairwise interactions of all 21 features
 x_train_inter = poly.fit_transform(x_train)
@@ -98,9 +112,7 @@ x_validation_inter = poly.transform(x_validation)
 x_test_inter = poly.transform(x_test)
 
 # Maintain feature names
-feature_names = poly.get_feature_names_out(
-    x_train.columns
-)
+feature_names = poly.get_feature_names_out()
 
 x_train_inter = pd.DataFrame(
     x_train_inter,
@@ -120,24 +132,32 @@ x_test_inter = pd.DataFrame(
     index=x_test.index
 )
 
-feature_names = x_train_inter.columns
+# Data actually used in feature selection
+x_train_fs_inter = pd.DataFrame(
+    poly.transform(x_train_fs),
+    columns=feature_names,
+    index=x_train_fs.index
+)
 
-# create a supervised learning model
-neighbor_model = KNeighborsClassifier(n_neighbors=9).fit(X=x_train, y=y_train)
-lr_model = LogisticRegression(max_iter=1000).fit(X=x_train, y=y_train)
-print(f'Accuracy with hello neighbor: {neighbor_model.score(x_test, y_test)}')
+#feature_names = x_train_inter.columns
 
-lr_score = lr_model.score(x_test,y_test)
-print(f'Accuracy with logistic regression model: {lr_score}')
+# create a supervised learning model with all features and interactions for comparison
+neighbor_model = KNeighborsClassifier(n_neighbors=N_NEIGHBORS).fit(X=x_train_fs_inter, y=y_train_fs)
+#lr_model = LogisticRegression(max_iter=1000).fit(X=x_train, y=y_train)
+full_model_score = neighbor_model.score(x_validation_inter, y_validation)
+print(f'Accuracy with all features: {full_model_score}')
+
+#lr_score = lr_model.score(x_test,y_test)
+#print(f'Accuracy with logistic regression model: {lr_score}')
 
 # note to self: features_list -> 21 features, feature_names -> 231 features
-features_list = x_train.columns
+#features_list = x_train.columns
 print((len(feature_names)))
-print(features_list)
+#print(features_list)
 
 # Do reverse stepwise feature selection and train a model with subset of features
-reduced_model, reduced_features = feature_selection(features_list=features_list, best_score=0)
-print(f'Accuracy after feature selection: {reduced_model.score(x_test[reduced_features], y_test)}')
+reduced_model, reduced_features = feature_selection(features_list=x_train_inter.columns, best_score=full_model_score)
+#print(f'Accuracy after feature selection: {reduced_model.score(x_test[reduced_features], y_test)}')
 print((len(reduced_features)))
 #print((reduced_features))
 
@@ -152,5 +172,5 @@ specificity = tn / (tn + fp)
 print(f'Accuracy: {accuracy}\nSensitivity: {sensitivity}\nSpecificity: {specificity}')
 
 # Save the trained model and the subset of features to be used in model_evaluation.py
-dump(reduced_model, "trained_model.joblib")
-dump(reduced_features, "reduced_features.joblib")
+dump(reduced_model, "trained_model_inter2.joblib")
+dump(reduced_features, "reduced_features_inter2.joblib")

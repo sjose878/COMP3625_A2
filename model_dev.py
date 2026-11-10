@@ -44,6 +44,7 @@ def feature_selection(features_list, best_score: float):
         # create a model with one less feature
         print(f'Feature being tested: {features_list[i]}')
         reduced_features = features_list.drop(features_list[i])
+        # Get rid of the feature in training and validation data
         x_minus = x_train_fs_inter[reduced_features]
         x_valid_minus = x_validation_inter[reduced_features]
 
@@ -70,6 +71,7 @@ def feature_selection(features_list, best_score: float):
     reduced_features = features_list.drop(feature_dropped)
     print(f"Feature dropped: {feature_dropped}")
     print(f'# of features remaining: {len(reduced_features)}')
+
     return feature_selection(reduced_features, best_curr_score)
 
 # MAIN CODE
@@ -126,19 +128,16 @@ x_test_inter = pd.DataFrame(x_test_inter,columns=feature_names,index=x_test.inde
 # Add all the feature interactions as columns to the subset of 20000 customer training data
 x_train_fs_inter = pd.DataFrame(poly.transform(x_train_fs),columns=feature_names,index=x_train_fs.index)
 
+print(f'# of features & interactions: {len(feature_names)}')
 
 # create a baseline supervised learning model with all features and interactions for comparison
 neighbor_model = KNeighborsClassifier(n_neighbors=N_NEIGHBORS).fit(X=x_train_fs_inter, y=y_train_fs)
 full_model_score = neighbor_model.score(x_validation_inter, y_validation)
 print(f'Accuracy with all features: {full_model_score}')
 
-print(f'# of features & interactions: {len(feature_names)}')
-
-# Do reverse stepwise feature selection and train a model with subset of features
+# Do reverse stepwise feature selection and train a model with subset of features + interactions
 reduced_model, reduced_features = feature_selection(features_list=x_train_inter.columns, best_score=full_model_score)
-#print(f'Accuracy after feature selection: {reduced_model.score(x_test[reduced_features], y_test)}')
-print((len(reduced_features)))
-#print((reduced_features))
+print(f'# of features after feature elimination: {len(reduced_features)}')
 
 # Compute accuracy, sensitivity, and specificity of model with confusion matrix
 y_predictions = reduced_model.predict(x_test_inter[reduced_features])

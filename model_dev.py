@@ -16,7 +16,7 @@ customer_claims = pd.read_csv('./data/customer_claims.csv', index_col=None)
 N_NEIGHBORS = 41
 
 """
-Takes a list of the features of a dataset and recursively...
+Takes a list of the features of a dataset and recursively... train model
 Code is repurposed from lab 6
 param: features_list - list of features from wine dataset. Since it's recursive, the parameter may also be the list of features that are redudant for classification
 param: best_score - accuracy score that needs to be surpassed to determine if another feature should be recursively removed. 0 is passed in initially

@@ -31,6 +31,7 @@ def feature_selection(features_list, best_score: float):
     # Edge case so it does not remove all features.
     if len(features_list) <= 1:
         final_model = KNeighborsClassifier(n_neighbors=N_NEIGHBORS)
+        # fit model with all features including interactions
         final_model.fit(x_train_inter[features_list],y_train)
         return final_model, features_list
     
@@ -93,15 +94,14 @@ y_test = customer_claims['claim'].loc[test_idx]
 subset_size = min(20000, len(x_train))
 subset_idx = np.random.choice(x_train.index,size=subset_size,replace=False)
 
-
-# The training data to be used in feature selection
+# The training data of 20000 to be used in feature selection
 x_train_fs = x_train.loc[subset_idx]
 y_train_fs = y_train.loc[subset_idx]
 
-
+# Sometimes 2 features together 
+# Create all pairwise interactions of all 21 features.
 poly = PolynomialFeatures(degree=2,interaction_only=True,include_bias=False)
 
-# Creat all pairwise interactions of all 21 features
 x_train_inter = poly.fit_transform(x_train)
 x_validation_inter = poly.transform(x_validation)
 x_test_inter = poly.transform(x_test)

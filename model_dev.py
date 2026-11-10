@@ -73,12 +73,6 @@ def feature_selection(features_list, best_score: float):
 
 # MAIN CODE
 
-poly = PolynomialFeatures(
-    degree=2,
-    interaction_only=True,
-    include_bias=False
-)
-
 # randomly assign instances to training, validation, and test sets.
 # 80% training, 10% validation, 10% test
 random_instances = np.random.random(size=customer_data.shape[0])
@@ -95,17 +89,17 @@ y_validation = customer_claims['claim'].loc[validation_idx]
 x_test = customer_data.loc[test_idx]
 y_test = customer_claims['claim'].loc[test_idx]
 
-# Do feature select on random subset. Reduce computation time.
+# Create a subset of 20000 out of 100000 customers that model will be trained on. This is to reduce computation time
 subset_size = min(20000, len(x_train))
-subset_idx = np.random.choice(
-    x_train.index,
-    size=subset_size,
-    replace=False
-)
+subset_idx = np.random.choice(x_train.index,size=subset_size,replace=False)
+
+
 # The training data to be used in feature selection
 x_train_fs = x_train.loc[subset_idx]
 y_train_fs = y_train.loc[subset_idx]
 
+
+poly = PolynomialFeatures(degree=2,interaction_only=True,include_bias=False)
 
 # Creat all pairwise interactions of all 21 features
 x_train_inter = poly.fit_transform(x_train)

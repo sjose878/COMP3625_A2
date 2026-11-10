@@ -17,7 +17,11 @@ These are measured on lines 146, 147, and 148 in model_dev.py
 
 Question 2:
 How confident are you that your model has not overfit the historical data? Why?
-We're actually not confident out model did not overfit the historical data. This is because we did feature selection, which fits a model to the training data many times over many iterations. Due to iterating over the same data over many iterations, the greedy feature selection may have dropped features that were not helpful in that specific dataset. This is not to mention "trained_model_inter2.joblib" which was trained on all features and feature interaction pairs. Which ended up being a total of 231 features. It was reduced to 222 features after running backwards feature selection. However, 222 is still an absurd amount of explanatory variables. It is way too complex. Feature selection must have gotten stuck in a local optima and couldn't find a 221 variable model that could beat 222 variables. This interaction model most likely overfit the data. 
+We're actually not confident out model did not overfit the historical data. This is because we did feature selection, which fits a model to the training data many times over
+many iterations. Due to iterating over the same data over many iterations, the greedy feature selection may have dropped features that were not helpful in that specific dataset.
+This is not to mention "trained_model_inter2.joblib" which was trained on all features and feature interaction pairs. Which ended up being a total of 231 features. It was 
+reduced to 222 features after running backwards feature selection. However, 222 is still an absurd amount of explanatory variables. It is way too complex. Feature selection must 
+have gotten stuck in a local optima and couldn't find a 221 variable model that could beat 222 variables. This interaction model most likely overfit the data. 
 
 
 Question 3:

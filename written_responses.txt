@@ -1,3 +1,7 @@
+IMPORTANT CONTEXT: There 2 trained models we have: "trained_model.joblib" & "trained_model_inter2.joblib"
+"trained_model_inter2.joblib" was made with our current model_dev file. It's file size was too big to upload to GitHub and so we couldn't use it in our model_evaluation file.
+"trained_model.joblib" was used in model_evaluation instead. It only went through feature selection. Did not use feature interaction like the other model.
+
 Question 0:
 Report the line number(s) where your program performs utility calculations
 
@@ -12,6 +16,11 @@ The following are measurements from the model "trained_model_inter2.joblib" whic
 Accuracy: 0.6980
 Sensitivity: 0.3080
 Specificity: 0.8933
+
+The following are measurements from the model "trained_model.joblib" which only had feature selection done on it
+Accuracy: 0.6850
+Sensitivity: 0.3844
+Specificity: 0.8373
 
 These are measured on lines 146, 147, and 148 in model_dev.py
 
